@@ -1,0 +1,56 @@
+version: "3.9"
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/ServiceDesk
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DJANGO_SETTINGS_MODULE=api.main.settings
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - EMAIL_HOST=smtp.example.com
+  db:
+    image: postgres:16.6
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=sakura
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+  celeryworker:
+    build: .
+    depends_on:
+      - redis
+    environment:
+      - DJANGO_SETTINGS_MODULE=api.main.settings
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - EMAIL_HOST=smtp.example.com
+    command: ["celery", "-A", "api.main.celery", "worker", "-l", "info", "--pool=prefork", "-Q", "default,notify_worker"]
+  celerybeat:
+    build: .
+    depends_on:
+      - redis
+    environment:
+      - DJANGO_SETTINGS_MODULE=api.main.settings
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - EMAIL_HOST=smtp.example.com
+    command: ["celery", "-A", "api.main.celery", "beat", "-l", "info"]
+
+volumes:
+  pgdata:

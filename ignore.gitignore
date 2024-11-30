@@ -1,0 +1,38 @@
+# Django-specific
+*.pyc
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.tox/
+
+# Virtual environments
+.venv/
+env/
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.suo
+*.csproj
+*.sln
+*.user
+*.tmproj
+*.userprefs
+
+# Other generated files
+*.log
+*.*~  # Backup files
+
+# Build artifacts
+dist/
+build/
+.eggs/
+*.egg-info/
+
+# Testing files
+test_results/
+.cache/
+
+# Various
+.DS_Store

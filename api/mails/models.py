@@ -20,8 +20,7 @@ class Ticket(TimestampedModel):
     manager = models.ForeignKey(User, related_name="assigned_tickets", null=True, on_delete=models.SET_NULL)
     recipient = models.EmailField()
     title = models.CharField(max_length=500)
-    status = models.CharField(max_length=2, default=ActionTicket.OPEN.value)
-    is_closed = models.BooleanField(default=False)
+    status = models.CharField(max_length=2, choices=STATUS_TICKET, default=ActionTicket.OPEN.value)
 
 
 class Message(TimestampedModel):

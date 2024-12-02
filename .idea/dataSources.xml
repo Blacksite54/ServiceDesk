@@ -4,7 +4,7 @@
     <data-source source="LOCAL" name="db" uuid="4f48015b-3874-470b-8177-9cac8279de56">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
-      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
       <jdbc-url>jdbc:sqlite:C:\Users\79964\PycharmProjects\ServiceDesk\api\db.sqlite3</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>

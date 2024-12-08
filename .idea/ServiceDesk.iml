@@ -23,12 +23,10 @@
     <option name="namespacePackageFolders">
       <list>
         <option value="$MODULE_DIR$/api" />
-        <option value="$MODULE_DIR$/api/authentication" />
         <option value="$MODULE_DIR$/api/core" />
         <option value="$MODULE_DIR$/api/mails" />
         <option value="$MODULE_DIR$/api/main" />
         <option value="$MODULE_DIR$/api/users" />
-        <option value="$MODULE_DIR$/api/authentication/migrations" />
         <option value="$MODULE_DIR$/api/mails/migrations" />
         <option value="$MODULE_DIR$/api/users/migrations" />
       </list>

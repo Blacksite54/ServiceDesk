@@ -30,6 +30,7 @@ class TicketViewSet(
         if self.action != "list":
             queryset = self.queryset.select_related(
                 "manager",
+            ).prefetch_related(
                 "message",
             )
         return queryset
@@ -55,7 +56,7 @@ class TicketViewSet(
 
     def retrieve(self, request, pk):
         try:
-            ticket = self.get_queryset().filter(pk=pk).get()
+            ticket = self.get_queryset().filter(pk=pk).first()
 
         except Ticket.DoesNotExist:
             return Response(

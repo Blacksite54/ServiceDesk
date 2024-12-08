@@ -9,9 +9,58 @@ from api.users.models import User, TypeUser
 from api.users.serializers import UserSerializer
 
 
+class MessageSerializer(serializers.ModelSerializer[Message]):
+    ticket_id = serializers.PrimaryKeyRelatedField(
+        write_only=True,
+        queryset=Ticket.objects.all(),
+        required=False,
+        allow_null=True,
+    )
+    sender = UserSerializer(read_only=True)
+    message = serializers.CharField()
+
+    class Meta:
+        model = Message
+        fields = (
+            "ticket",
+            "ticket_id",
+            "sender",
+            "message",
+        )
+
+    def validate(self, attrs):
+        if not attrs.get("message"):
+            raise serializers.ValidationError(_('Field "message" is required.'))
+
+        return attrs
+
+    def create(self, validated_data):
+        sender: User = self.context["sender"]
+        ticket_id = validated_data.pop("ticket_id", None)
+
+        validated_data["sender"] = sender
+
+        if ticket_id:
+            ticket = Ticket.objects.filter(pk=ticket_id).first()
+            if ticket.status == ActionTicket.COMPLETED.value:
+                raise serializers.ValidationError(_('Не пиши сюда больше))'))
+        elif sender.type_user == TypeUser.User.value:
+            ticket = Ticket.objects.create(
+                user=sender,
+            )
+            send_email_start_task.delay(ticket.pk)
+        else:
+            raise serializers.ValidationError(_('the front sent the manager, so also without ticket_id.'))
+
+        instance = Message.objects.create(**validated_data, ticket=ticket)
+        api_email_message.delay()
+        return instance
+
+
 class TicketSerializer(serializers.ModelSerializer[Ticket]):
     user = UserSerializer(read_only=True)
     manager = UserSerializer(read_only=True)
+    messages = MessageSerializer(many=True, required=False, allow_null=True, allow_blank=True)
     manager_id = serializers.PrimaryKeyRelatedField(
         write_only=True,
         queryset=User.objects.all(),
@@ -21,7 +70,6 @@ class TicketSerializer(serializers.ModelSerializer[Ticket]):
     recipient = LowercaseEmailField(required=False, allow_null=True, allow_blank=True)
     title = serializers.CharField(max_length=500, required=False, allow_null=True, allow_blank=True)
     status = serializers.CharField(max_length=2)
-    is_closed = serializers.BaseSerializer(default=False)
 
     class Meta:
         model = Ticket
@@ -32,7 +80,6 @@ class TicketSerializer(serializers.ModelSerializer[Ticket]):
             "recipient",
             "title",
             "status",
-            "is_closed",
         )
 
     def validate(self, attrs):
@@ -75,52 +122,3 @@ class TicketListSerializer(serializers.ModelSerializer[Ticket]):
             "title",
             "status",
         )
-
-
-class MessageSerializer(serializers.ModelSerializer[Message]):
-    ticket = TicketSerializer(read_only=True)
-    ticket_id = serializers.PrimaryKeyRelatedField(
-        write_only=True,
-        queryset=Ticket.objects.all(),
-        required=False,
-        allow_null=True,
-    )
-    sender = UserSerializer(read_only=True)
-    message = serializers.CharField(read_only=True)
-
-    class Meta:
-        model = Message
-        fields = (
-            "ticket",
-            "ticket_id",
-            "sender",
-            "message",
-        )
-
-    def validate(self, attrs):
-        if not attrs.get("message"):
-            raise serializers.ValidationError(_('Field "message" is required.'))
-
-        return attrs
-
-    def create(self, validated_data):
-        sender: User = self.context["sender"]
-        ticket_id = validated_data.pop("ticket_id", None)
-
-        validated_data["sender"] = sender
-
-        if ticket_id:
-            ticket = Ticket.objects.filter(pk=ticket_id).first()
-            if ticket.status == ActionTicket.COMPLETED.value:
-                raise serializers.ValidationError(_('Не пиши сюда больше))'))
-        elif sender.type_user == TypeUser.User.value:
-            ticket = Ticket.objects.create(
-                user=sender,
-            )
-            send_email_start_task.delay(ticket.pk)
-        else:
-            raise serializers.ValidationError(_('the front sent the manager, so also without ticket_id.'))
-
-        instance = Message.objects.create(**validated_data, ticket=ticket)
-        api_email_message.delay()
-        return instance

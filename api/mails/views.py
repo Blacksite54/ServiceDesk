@@ -11,7 +11,7 @@ from api.mails.models import Ticket, Message
 from api.mails.serializers import TicketSerializer, TicketListSerializer, MessageSerializer
 
 
-# TODO: можно разбить на 2: для пльзователей и для менеджеров и дописать permission_classes под менеджера
+# TODO: нужно разбить на 2: для пльзователей и для менеджеров и дописать permission_classes под менеджера
 class TicketViewSet(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
@@ -42,7 +42,19 @@ class TicketViewSet(
 
     def list(self, request, *args, **kwargs):
         user = get_user_in_request(request)
-
+        # TODO: менеджерам необходимо вернуть все, что не касается других менеджеров
+        # tickets = self.filter_queryset(
+        #     self.get_queryset().filter(
+        #         Q(manager__pk=user.pk) |
+        #         Q(manager__isnull=True)
+        #     )
+        # )
+        # TODO: Пользователю вернуть только его
+        # tickets = self.filter_queryset(
+        #     self.get_queryset().filter(
+        #         user__pk=user.pk
+        #     )
+        # )
         tickets = self.filter_queryset(
             self.get_queryset().filter(
                 Q(user__pk=user.pk) |
